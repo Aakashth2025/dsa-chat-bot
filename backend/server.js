@@ -16,15 +16,15 @@ const ai = new GoogleGenAI({
 
 app.post("/chat", async (req, res) => {
   try {
-    const { question } = req.body;
+    const { messages } = req.body;
 
-    if (!question?.trim()) {
+    if (!messages || messages.length === 0) {
       return res.status(400).json({
-        error: "Question is required",
+        error: "Messages are required",
       });
     }
 
-    const msg = question.toLowerCase().trim();
+    const msg = messages[messages.length - 1].text.toLowerCase().trim();
 
     // Handle greetings without calling Gemini
     const greetings = [
@@ -75,10 +75,15 @@ Example:
       });
     }
 
+    const history = messages.map((msg) => ({
+      role: msg.role === "user" ? "user" : "model",
+      parts: [{ text: msg.text }],
+    }));
+
     const response = await ai.models.generateContent({
       model: "gemini-2.5-flash",
 
-      contents: question,
+      contents: history,
 
       config: {
         systemInstruction: `
