@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import ReactMarkdown from "react-markdown";
 //import { PrismLight as SyntaxHighlighter } from "react-syntax-highlighter";
 //im+port { oneDark } from "react-syntax-highlighter/dist/esm/styles/prism";
@@ -9,6 +9,14 @@ function App() {
   const [question, setQuestion] = useState("");
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(false);
+  const chatBoxRef = useRef(null);
+
+  useEffect(() => {
+  if (chatBoxRef.current) {
+    chatBoxRef.current.scrollTop =
+      chatBoxRef.current.scrollHeight;
+  }
+}, [messages]);
 
   const askQuestion = async () => {
     if (!question.trim()) return;
@@ -21,6 +29,8 @@ function App() {
     setMessages((prev) => [...prev, userMessage]);
     setLoading(true);
 
+    setQuestion("");
+    
     try {
       const res = await fetch("http://localhost:3000/chat", {
         method: "POST",
@@ -50,7 +60,6 @@ function App() {
       ]);
     }
 
-    setQuestion("");
     setLoading(false);
   };
 
@@ -63,7 +72,7 @@ function App() {
           <p>Your personal Data Structures & Algorithms tutor</p>
         </div>
 
-        <div className="chat-box">
+        <div className="chat-box" ref={chatBoxRef}>
           {messages.length === 0 && (
             <div className="welcome">
               Ask anything about DSA 🚀
