@@ -9,18 +9,38 @@ function App() {
   const [question, setQuestion] = useState("");
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [currentChatId, setCurrentChatId] = useState(null);
   const chatBoxRef = useRef(null);
 
   useEffect(() => {
-  if (chatBoxRef.current) {
-    chatBoxRef.current.scrollTop =
-      chatBoxRef.current.scrollHeight;
-  }
-}, [messages]);
+    if (chatBoxRef.current) {
+      chatBoxRef.current.scrollTop =
+        chatBoxRef.current.scrollHeight;
+    }
+  }, [messages]);
+
+  useEffect(() => {
+    const createChat = async () => {
+      try {
+        const res = await fetch("http://localhost:3000/chats", {
+          method: "POST",
+        });
+
+        const data = await res.json();
+
+        setCurrentChatId(data._id);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
+    createChat();
+  }, []);
 
   const askQuestion = async () => {
     if (!question.trim()) return;
-
+    if (!currentChatId) return;
+    
     const userMessage = {
       role: "user",
       text: question,
@@ -30,15 +50,15 @@ function App() {
     setLoading(true);
 
     setQuestion("");
-    
+
     try {
-      const res = await fetch("http://localhost:3000/chat", {
+      const res = await fetch(`http://localhost:3000/chats/${currentChatId}/messages`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          messages: [...messages, userMessage],
+          message: userMessage.text,
         }),
       });
 
@@ -80,44 +100,43 @@ function App() {
           )}
 
           {messages.map((msg, index) => (
-  <div
-    key={index}
-    className={`message ${
-      msg.role === "user"
-        ? "user-message"
-        : "bot-message"
-    }`}
-  >
-    <ReactMarkdown
-      remarkPlugins={[remarkGfm]}
-      components={{
-        code({ inline, className, children }) {
-          const match = /language-(\w+)/.exec(
-            className || ""
-          );
+            <div
+              key={index}
+              className={`message ${msg.role === "user"
+                  ? "user-message"
+                  : "bot-message"
+                }`}
+            >
+              <ReactMarkdown
+                remarkPlugins={[remarkGfm]}
+                components={{
+                  code({ inline, className, children }) {
+                    const match = /language-(\w+)/.exec(
+                      className || ""
+                    );
 
-          if (!inline && match) {
-            return (
-              <pre className="code-block">
-                <code>
-                  {String(children)}
-                </code>
-              </pre>
-            );
-          }
+                    if (!inline && match) {
+                      return (
+                        <pre className="code-block">
+                          <code>
+                            {String(children)}
+                          </code>
+                        </pre>
+                      );
+                    }
 
-          return (
-            <code className={className}>
-              {children}
-            </code>
-          );
-        },
-      }}
-    >
-      {msg.text}
-    </ReactMarkdown>
-  </div>
-))}
+                    return (
+                      <code className={className}>
+                        {children}
+                      </code>
+                    );
+                  },
+                }}
+              >
+                {msg.text}
+              </ReactMarkdown>
+            </div>
+          ))}
 
           {loading && (
             <div className="bot-message">

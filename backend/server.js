@@ -1,11 +1,19 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
+import mongoose from "mongoose";
 import { GoogleGenAI } from "@google/genai";
+import ChatModel from "./models/models.chat.js";
 
 dotenv.config();
 
 const app = express();
+
+mongoose.connect(process.env.MONGO_URL).then(() => {
+  console.log("Connected to MongoDB");
+}).catch((err) => {
+  console.error("MongoDB connection error:", err);
+});
 
 app.use(cors());
 app.use(express.json());
@@ -14,17 +22,36 @@ const ai = new GoogleGenAI({
   apiKey: process.env.GOOGLE_API_KEY,
 });
 
-app.post("/chat", async (req, res) => {
+app.post("/chats/:id/messages", async (req, res) => {
   try {
-    const { messages } = req.body;
+    const { id } = req.params;
+    const { message } = req.body;
 
-    if (!messages || messages.length === 0) {
-      return res.status(400).json({
-        error: "Messages are required",
+    const chat = await ChatModel.findById(id);
+    if (!chat) {
+      return res.status(404).json({
+        error: "Chat not found",
       });
     }
 
-    const msg = messages[messages.length - 1].text.toLowerCase().trim();
+    if (!message) {
+      return res.status(400).json({
+        error: "Message is required",
+      });
+    }
+
+    const msg = message.toLowerCase().trim();
+
+    chat.messages.push({
+      role: "user",
+      text: message.trim(),
+    });
+    if (
+      chat.title === "New Chat" &&
+      chat.messages.length === 1
+    ) {
+      chat.title = message.trim().slice(0, 40);
+    }
 
     // Handle greetings without calling Gemini
     const greetings = [
@@ -75,7 +102,7 @@ Example:
       });
     }
 
-    const history = messages.map((msg) => ({
+    const history = chat.messages.map((msg) => ({
       role: msg.role === "user" ? "user" : "model",
       parts: [{ text: msg.text }],
     }));
@@ -137,6 +164,13 @@ int main() {
       },
     });
 
+    chat.messages.push({
+      role: "bot",
+      text: response.text,
+    });
+
+    await chat.save();
+
     return res.status(200).json({
       answer: response.text,
     });
@@ -145,6 +179,72 @@ int main() {
 
     return res.status(500).json({
       error: "Internal Server Error",
+    });
+  }
+});
+
+app.post("/chats", async (req, res) => {
+  try {
+    const chat = await ChatModel.create({
+      title: "New Chat",
+      messages: [],
+    });
+
+    return res.status(201).json(chat);
+  } catch (error) {
+    console.error(error);
+
+    return res.status(500).json({
+      error: "Internal Server Error",
+    });
+  }
+});
+
+app.post("/new-chat", async (req, res) => {
+  try {
+    const chat = await ChatModel.create({
+      title: "New Chat",
+      messages: []
+    });
+    return res.status(200).json(chat);
+  }
+  catch (error) {
+    console.error("Error creating new chat:", error);
+    return res.status(500).json({
+      error: "Failed to create new chat",
+    });
+  }
+});
+
+app.get("/chats", async (req, res) => {
+  try {
+    const chats = await ChatModel.find().sort({ createdAt: -1 });
+    return res.status(200).json(chats);
+  }
+  catch (error) {
+    console.error("Error fetching chats:", error);
+    return res.status(500).json({
+      error: "Failed to fetch chats",
+    });
+  }
+});
+
+app.get("/chats/:id", async (req, res) => {
+  try {
+    const chat = await ChatModel.findById(req.params.id);
+
+    if (!chat) {
+      return res.status(404).json({
+        error: "Chat not found",
+      });
+    }
+
+    return res.status(200).json(chat);
+  } catch (error) {
+    console.error(error);
+
+    return res.status(500).json({
+      error: "Failed to fetch chat",
     });
   }
 });
