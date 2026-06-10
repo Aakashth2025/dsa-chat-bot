@@ -1,4 +1,4 @@
-.app {
+/*.app {
    min-height: 100vh;
   background: #050505;
   background-image:
@@ -8,10 +8,16 @@
   justify-content: center;
   align-items: center;
   padding: 30px;
+}*/
+.app {
+  display: flex;
+  height: 100vh;
+  padding: 16px;
+  gap: 16px;
 }
 
 .chat-container {
-  width: min(1100px, 100%);
+  flex: 1;
   height: 90vh;
 
   background: #0d1117;

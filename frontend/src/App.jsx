@@ -10,6 +10,7 @@ function App() {
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(false);
   const [currentChatId, setCurrentChatId] = useState(null);
+  const [chats, setChats] = useState([]);
   const chatBoxRef = useRef(null);
 
   useEffect(() => {
@@ -19,7 +20,7 @@ function App() {
     }
   }, [messages]);
 
-  useEffect(() => {
+  /*useEffect(() => {
     const createChat = async () => {
       try {
         const res = await fetch("http://localhost:3000/chats", {
@@ -35,12 +36,48 @@ function App() {
     };
 
     createChat();
+  }, []);*/
+
+  useEffect(() => {
+    fetchChats();
   }, []);
 
+  const fetchChats = async () => {
+    try {
+      const res = await fetch("http://localhost:3000/chats");
+      const data = await res.json();
+      setChats(data);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const loadChat = async(chatId)=>{
+    try{
+      const res = await fetch(`http://localhost:3000/chats/${chatId}`);
+      const data = await res.json();
+      setCurrentChatId(data._id);
+      setMessages(data.messages);
+  } catch(err){
+    console.log(err);
+  }
+};
+
+  const createNewChat = async ()=>{
+    try{
+      const res = await fetch("http://localhost:3000/chats", {method:"POST"});
+      const data = await res.json();
+      setCurrentChatId(data._id);
+      setMessages([]);
+      fetchChats();
+    } catch(err){
+      console.log(err);
+    }
+  };
   const askQuestion = async () => {
     if (!question.trim()) return;
     if (!currentChatId) return;
-    
+
     const userMessage = {
       role: "user",
       text: question,
@@ -85,6 +122,26 @@ function App() {
 
   return (
     <div className="app">
+
+      <div className="sidebar">
+
+        <button className="new-chat-btn" onClick={createNewChat}>
+          + New Chat
+        </button>
+
+        {chats.map((chat) => (
+          <div
+            key={chat._id}
+            onClick={()=>{
+              //console.log("clicked", chat._id);
+              loadChat(chat._id);
+            }}
+          >
+            {chat.title}
+          </div>
+        ))}
+
+      </div>
       <div className="chat-container">
 
         <div className="header">
@@ -103,8 +160,8 @@ function App() {
             <div
               key={index}
               className={`message ${msg.role === "user"
-                  ? "user-message"
-                  : "bot-message"
+                ? "user-message"
+                : "bot-message"
                 }`}
             >
               <ReactMarkdown
