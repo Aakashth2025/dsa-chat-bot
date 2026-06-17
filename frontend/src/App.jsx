@@ -12,6 +12,7 @@ function App() {
   const [currentChatId, setCurrentChatId] = useState(null);
   const [chats, setChats] = useState([]);
   const chatBoxRef = useRef(null);
+  const [searchQuery, setsearchQuery] = useState("");
 
   useEffect(() => {
     if (chatBoxRef.current) {
@@ -52,28 +53,46 @@ function App() {
     }
   };
 
-  const loadChat = async(chatId)=>{
-    try{
+  const loadChat = async (chatId) => {
+    try {
       const res = await fetch(`http://localhost:3000/chats/${chatId}`);
       const data = await res.json();
       setCurrentChatId(data._id);
       setMessages(data.messages);
-  } catch(err){
-    console.log(err);
-  }
-};
+    } catch (err) {
+      console.log(err);
+    }
+  };
 
-  const createNewChat = async ()=>{
-    try{
-      const res = await fetch("http://localhost:3000/chats", {method:"POST"});
+  const createNewChat = async () => {
+    try {
+      const res = await fetch("http://localhost:3000/chats", { method: "POST" });
       const data = await res.json();
       setCurrentChatId(data._id);
       setMessages([]);
       fetchChats();
-    } catch(err){
+    } catch (err) {
       console.log(err);
     }
   };
+
+  const deleteChat = async (chatId) => {
+    try {
+      await fetch(`http://localhost:3000/chats/${chatId}`, {
+        method: "DELETE",
+      });
+
+      fetchChats();
+      if (currentChatId === chatId) {
+        setCurrentChatId(null);
+        setMessages([]);
+      }
+    }
+    catch (err) {
+      console.error(err);
+    }
+  }
+
   const askQuestion = async () => {
     if (!question.trim()) return;
     if (!currentChatId) return;
@@ -116,7 +135,7 @@ function App() {
         },
       ]);
     }
-
+    await fetchChats();
     setLoading(false);
   };
 
@@ -129,17 +148,31 @@ function App() {
           + New Chat
         </button>
 
-        {chats.map((chat) => (
-          <div
-            key={chat._id}
-            onClick={()=>{
-              //console.log("clicked", chat._id);
-              loadChat(chat._id);
-            }}
-          >
-            {chat.title}
-          </div>
-        ))}
+        <input type="text" className="search-chat" placeholder="Search chats..." value={searchQuery}
+          onChange={(e) => { setsearchQuery(e.target.value) }} />
+
+        {chats.filter((chat) => (chat.title || "").toLowerCase().includes(searchQuery.toLowerCase()))
+          .map((chat) => (
+            <div
+              key={chat._id}
+              className={
+                currentChatId === chat._id ? "chat-item active-chat" : "chat-item"
+              }
+              onClick={() => {
+                //console.log("clicked", chat._id);
+                loadChat(chat._id);
+              }}
+            >
+              <span className="chat-item-title">{chat.title}</span>
+              <button className="delete-btn" onClick={(e) => {
+                e.stopPropagation();
+                if (window.confirm("Delete this chat?"))
+                  deleteChat(chat._id);
+              }}>🗑</button>
+            </div>
+          ))}
+
+        {chats.length === 0 && (<p className="empty-sidebar">No chats yet</p>)}
 
       </div>
       <div className="chat-container">
@@ -152,7 +185,7 @@ function App() {
         <div className="chat-box" ref={chatBoxRef}>
           {messages.length === 0 && (
             <div className="welcome">
-              Ask anything about DSA 🚀
+              Ask anything about Data Structures and Algo
             </div>
           )}
 

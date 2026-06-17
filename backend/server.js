@@ -249,6 +249,27 @@ app.get("/chats/:id", async (req, res) => {
   }
 });
 
+app.delete("/chats/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const chat = await ChatModel.findByIdAndDelete(id);
+    if (!chat) {
+      return res.status(404).json({
+        error: "Chat not found"
+      });
+    }
+    return res.status(200).json({
+      message: "Chat deleted succesfully"
+    });
+  }
+  catch(err){
+    console.error(error);
+    return req.status(500).json({
+      error: "Internal server error"
+    });
+  }
+})
+
 app.get("/", (req, res) => {
   res.send("DSA Mentor AI Backend is running 🚀");
 });

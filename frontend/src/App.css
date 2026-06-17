@@ -81,6 +81,7 @@
   border: 1px solid rgba(0, 255, 136, 0.15);
 
   border-radius: 14px;
+  text-align: left;
 }
 
 .input-area {
@@ -107,10 +108,6 @@ textarea {
   box-sizing: border-box;
   font-family: "JetBrains Mono", monospace;
   font-size: 15px;
-}
-
-textarea:focus {
-  border-color: rgba(0, 255, 136, 0.5);
 }
 
 textarea::placeholder {
@@ -151,10 +148,6 @@ button:hover {
   text-align: center;
   color: #64748b;
   margin-top: 100px;
-}
-
-.bot-message {
-  text-align: left;
 }
 
 .bot-message h1 {
@@ -242,6 +235,99 @@ button:hover {
 
 
 textarea:focus {
-  border-color: #2563eb;
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+  border-color: rgba(0, 255, 136, 0.5);
+}
+
+.chat-item{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px;
+  margin-bottom: 8px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: 0.2s;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.chat-item:hover{
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.active-chat{
+  background: rgba(0, 255, 136, 0.15);
+  border: 1px solid rgba(0, 255, 136, 0.15);
+}
+
+.chat-item-title{
+  display: block;
+  /*width: 100%;*/
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sidebar {
+  width: 220px;
+  flex-shrink: 0;
+
+  background: #0b1220;
+
+  border: 1px solid rgba(255,255,255,0.08);
+
+  border-radius: 16px;
+
+  padding: 16px;
+
+  overflow-y: auto;
+}
+
+.delete-btn{
+  width: auto;
+  margin: 0;
+  padding: 4px 8px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  opacity: 0.6;
+  transition: opacity 0.2s ease;
+}
+
+.delete-btn:hover{
+  opacity: 1;
+  background: transparent;
+}
+
+.empty-sidebar{
+  margin-top: 20px;
+  text-align: center;
+  color: #64748b;
+  font-size: 14px;
+  font-style: italic;
+}
+
+.search-chat{
+  width: 100%;
+  box-sizing: border-box;
+  margin: 12px 0px 16px;
+  padding: 10px 12px;background: #0b0f14;
+  color: #00ff88;
+  border: 1px solid rgba(0, 255, 136, 0.2);
+  border-radius: 10px;
+  outline: none;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 14px;
+}
+
+.search-chat::placeholder{
+  color: rgba(0, 255, 136,  0.1);
+}
+
+.search-chat:focus{
+  border-color: rgba(0, 255, 136, 0.5);
+  box-shadow: 0 0 0 3px rgba(0, 255, 136,  0.1);
 }
